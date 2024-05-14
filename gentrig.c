@@ -2,162 +2,153 @@
 #include <Python.h>
 #include <math.h>
 #include <corecrt_math_defines.h>
+#include <numpy/ndarraytypes.h>
+#include "numpy/ufuncobject.h"
+#include "numpy/npy_3kcompat.h"
 
 #define sec(x) (1.0 / cos(x))
 #define cot(x) (1.0 / tan(x))
 
-#define boilerplate(name, expr)                                  \
-    static PyObject *##name##_c(PyObject *dummy, PyObject *args) \
-    {                                                            \
-        double x;                                                \
-        if (!PyArg_ParseTuple(args, "d", &x))                    \
-            return NULL;                                         \
-        return Py_BuildValue("d", expr);                         \
+static char types[2] = {NPY_DOUBLE, NPY_DOUBLE};
+static char types_poly[3] = {NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE};
+
+#define ufuncbp(name, expr)                                                                              \
+    static void name##_ufunc(char **args, const npy_intp *dimensions, const npy_intp *steps, void *data) \
+    {                                                                                                    \
+        npy_intp i;                                                                                      \
+        npy_intp n = dimensions[0];                                                                      \
+        char *in = args[0], *out = args[1];                                                              \
+        npy_intp in_step = steps[0], out_step = steps[1];                                                \
+        double x;                                                                                        \
+        for (i = 0; i < n; i++)                                                                          \
+        {                                                                                                \
+            x = *(double *)in;                                                                           \
+            *((double *)out) = expr;                                                                     \
+            in += in_step;                                                                               \
+            out += out_step;                                                                             \
+        }                                                                                                \
     }
 
-#define DEFINE_TRIG_FUNCTIONS(name, expr_sin, expr_cos) \
-    boilerplate(sin##name, expr_sin);                   \
-    boilerplate(cos##name, expr_cos);                   \
-    boilerplate(tan##name, (expr_sin) / (expr_cos));    \
-    boilerplate(csc##name, 1.0 / (expr_sin));           \
-    boilerplate(sec##name, 1.0 / (expr_cos));           \
-    boilerplate(cot##name, (expr_cos) / (expr_sin));
+#define ufuncs(name, expr_sin, expr_cos)                                      \
+    ufuncbp(sin##name, expr_sin);                                             \
+    ufuncbp(cos##name, expr_cos);                                             \
+    ufuncbp(tan##name, (expr_sin) / (expr_cos));                              \
+    ufuncbp(csc##name, 1.0 / (expr_sin));                                     \
+    ufuncbp(sec##name, 1.0 / (expr_cos));                                     \
+    ufuncbp(cot##name, (expr_cos) / (expr_sin));                              \
+    PyUFuncGenericFunction funcs_sin##name##_ufunc[1] = {&sin##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_cos##name##_ufunc[1] = {&cos##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_tan##name##_ufunc[1] = {&tan##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_csc##name##_ufunc[1] = {&csc##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_sec##name##_ufunc[1] = {&sec##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_cot##name##_ufunc[1] = {&cot##name##_ufunc};
 
-DEFINE_TRIG_FUNCTIONS(p, -cbrt(3.0 * x), pow(cbrt(3.0 * x), 2.0))
+#define ufuncs_impl(name)                                                                                                 \
+    PyObject *sin##name, *cos##name, *tan##name, *csc##name, *sec##name, *cot##name;                                      \
+                                                                                                                          \
+    sin##name = PyUFunc_FromFuncAndData(funcs_sin##name##_ufunc, NULL, types, 1, 1, 1, PyUFunc_None, "sin" #name, "", 0); \
+    cos##name = PyUFunc_FromFuncAndData(funcs_cos##name##_ufunc, NULL, types, 1, 1, 1, PyUFunc_None, "cos" #name, "", 0); \
+    tan##name = PyUFunc_FromFuncAndData(funcs_tan##name##_ufunc, NULL, types, 1, 1, 1, PyUFunc_None, "tan" #name, "", 0); \
+    csc##name = PyUFunc_FromFuncAndData(funcs_csc##name##_ufunc, NULL, types, 1, 1, 1, PyUFunc_None, "csc" #name, "", 0); \
+    sec##name = PyUFunc_FromFuncAndData(funcs_sec##name##_ufunc, NULL, types, 1, 1, 1, PyUFunc_None, "sec" #name, "", 0); \
+    cot##name = PyUFunc_FromFuncAndData(funcs_cot##name##_ufunc, NULL, types, 1, 1, 1, PyUFunc_None, "cot" #name, "", 0); \
+                                                                                                                          \
+    PyDict_SetItemString(d, "sin" #name, sin##name);                                                                      \
+    PyDict_SetItemString(d, "cos" #name, cos##name);                                                                      \
+    PyDict_SetItemString(d, "tan" #name, tan##name);                                                                      \
+    PyDict_SetItemString(d, "csc" #name, csc##name);                                                                      \
+    PyDict_SetItemString(d, "sec" #name, sec##name);                                                                      \
+    PyDict_SetItemString(d, "cot" #name, cot##name);                                                                      \
+                                                                                                                          \
+    Py_DECREF(sin##name);                                                                                                 \
+    Py_DECREF(cos##name);                                                                                                 \
+    Py_DECREF(tan##name);                                                                                                 \
+    Py_DECREF(csc##name);                                                                                                 \
+    Py_DECREF(sec##name);                                                                                                 \
+    Py_DECREF(cot##name);
 
-DEFINE_TRIG_FUNCTIONS(l, x, 1.0)
+ufuncs(p, -cbrt(3.0 * x), pow(cbrt(3.0 * x), 2.0));
+
+ufuncs(l, x, 1.0);
 
 /*
 Polygonal Trig is a special case from the macro in
 that it includes a second argument for number of sides
 */
 
+#define ufuncbp_poly(name, precalc, expr)                                                                \
+                                                                                                         \
+    static void name##_ufunc(char **args, const npy_intp *dimensions, const npy_intp *steps, void *data) \
+    {                                                                                                    \
+        npy_intp i;                                                                                      \
+        npy_intp n = dimensions[0];                                                                      \
+        char *in1 = args[0], *in2 = args[1], *out = args[2];                                             \
+        npy_intp in1_step = steps[0], in2_step = steps[1], out_step = steps[2];                          \
+        double x;                                                                                        \
+        double y;                                                                                        \
+        for (i = 0; i < n; i++)                                                                          \
+        {                                                                                                \
+            x = *(double *)in1;                                                                          \
+            y = *(double *)in2;                                                                          \
+            precalc;                                                                                     \
+            *((double *)out) = expr;                                                                     \
+            in1 += in1_step;                                                                             \
+                                                                                                         \
+            in2 += in2_step;                                                                             \
+            out += out_step;                                                                             \
+        }                                                                                                \
+    }
+
+#define ufuncs_poly(name, precalc, expr_sin, expr_cos)                        \
+    ufuncbp_poly(sin##name, precalc, expr_sin);                               \
+    ufuncbp_poly(cos##name, precalc, expr_cos);                               \
+    ufuncbp_poly(tan##name, precalc, (expr_sin) / (expr_cos));                \
+    ufuncbp_poly(csc##name, precalc, 1.0 / (expr_sin));                       \
+    ufuncbp_poly(sec##name, precalc, 1.0 / (expr_cos));                       \
+    ufuncbp_poly(cot##name, precalc, (expr_cos) / (expr_sin));                \
+    PyUFuncGenericFunction funcs_sin##name##_ufunc[1] = {&sin##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_cos##name##_ufunc[1] = {&cos##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_tan##name##_ufunc[1] = {&tan##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_csc##name##_ufunc[1] = {&csc##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_sec##name##_ufunc[1] = {&sec##name##_ufunc}; \
+    PyUFuncGenericFunction funcs_cot##name##_ufunc[1] = {&cot##name##_ufunc};
+
+#define ufuncs_impl_poly(name)                                                                                                 \
+    PyObject *sin##name, *cos##name, *tan##name, *csc##name, *sec##name, *cot##name;                                           \
+                                                                                                                               \
+    sin##name = PyUFunc_FromFuncAndData(funcs_sin##name##_ufunc, NULL, types_poly, 1, 2, 1, PyUFunc_None, "sin" #name, "", 0); \
+    cos##name = PyUFunc_FromFuncAndData(funcs_cos##name##_ufunc, NULL, types_poly, 1, 2, 1, PyUFunc_None, "cos" #name, "", 0); \
+    tan##name = PyUFunc_FromFuncAndData(funcs_tan##name##_ufunc, NULL, types_poly, 1, 2, 1, PyUFunc_None, "tan" #name, "", 0); \
+    csc##name = PyUFunc_FromFuncAndData(funcs_csc##name##_ufunc, NULL, types_poly, 1, 2, 1, PyUFunc_None, "csc" #name, "", 0); \
+    sec##name = PyUFunc_FromFuncAndData(funcs_sec##name##_ufunc, NULL, types_poly, 1, 2, 1, PyUFunc_None, "sec" #name, "", 0); \
+    cot##name = PyUFunc_FromFuncAndData(funcs_cot##name##_ufunc, NULL, types_poly, 1, 2, 1, PyUFunc_None, "cot" #name, "", 0); \
+                                                                                                                               \
+    PyDict_SetItemString(d, "sin" #name, sin##name);                                                                           \
+    PyDict_SetItemString(d, "cos" #name, cos##name);                                                                           \
+    PyDict_SetItemString(d, "tan" #name, tan##name);                                                                           \
+    PyDict_SetItemString(d, "csc" #name, csc##name);                                                                           \
+    PyDict_SetItemString(d, "sec" #name, sec##name);                                                                           \
+    PyDict_SetItemString(d, "cot" #name, cot##name);                                                                           \
+                                                                                                                               \
+    Py_DECREF(sin##name);                                                                                                      \
+    Py_DECREF(cos##name);                                                                                                      \
+    Py_DECREF(tan##name);                                                                                                      \
+    Py_DECREF(csc##name);                                                                                                      \
+    Py_DECREF(sec##name);                                                                                                      \
+    Py_DECREF(cot##name);
+
 #define calc_k_p                                       \
-    double k = floor((x / 2.0) * cot(M_PI / n) + 0.5); \
-    double p = ((x / 2.0) * cot(M_PI / n) + 0.5) - floor((x / 2.0) * cot(M_PI / n) + 0.5);
+    double k = floor((x / 2.0) * cot(M_PI / y) + 0.5); \
+    double p = ((x / 2.0) * cot(M_PI / y) + 0.5) - floor((x / 2.0) * cot(M_PI / y) + 0.5);
 
-#define expr_sinpoly sec(M_PI / n) * (sin((M_PI / n) * (2 * k - 1)) * (1 - p) + sin((M_PI / n) * (2 * k + 1)) * p)
-#define expr_cospoly sec(M_PI / n) * (cos((M_PI / n) * (2 * k - 1)) * (1 - p) + cos((M_PI / n) * (2 * k + 1)) * p)
+#define expr_sinpoly sec(M_PI / y) * (sin((M_PI / y) * (2 * k - 1)) * (1 - p) + sin((M_PI / y) * (2 * k + 1)) * p)
+#define expr_cospoly sec(M_PI / y) * (cos((M_PI / y) * (2 * k - 1)) * (1 - p) + cos((M_PI / y) * (2 * k + 1)) * p)
 
-static PyObject *sinpoly_c(PyObject *dummy, PyObject *args)
-{
-    double x;
-    double n;
-    if (!PyArg_ParseTuple(args, "dd", &x, &n))
-        return NULL;
-    calc_k_p;
-    double res = expr_sinpoly;
-    return Py_BuildValue("d", res);
-}
-static PyObject *cospoly_c(PyObject *dummy, PyObject *args)
-{
-    double x;
-    double n;
-    if (!PyArg_ParseTuple(args, "dd", &x, &n))
-        return NULL;
-    calc_k_p;
-    double res = expr_cospoly;
-    return Py_BuildValue("d", res);
-}
-static PyObject *tanpoly_c(PyObject *dummy, PyObject *args)
-{
-    double x;
-    double n;
-    if (!PyArg_ParseTuple(args, "dd", &x, &n))
-        return NULL;
-    calc_k_p;
-    double res = (expr_sinpoly) / (expr_cospoly);
-    return Py_BuildValue("d", res);
-}
-static PyObject *cscpoly_c(PyObject *dummy, PyObject *args)
-{
-    double x;
-    double n;
-    if (!PyArg_ParseTuple(args, "dd", &x, &n))
-        return NULL;
-    calc_k_p;
-    double res = 1 / (expr_sinpoly);
-    return Py_BuildValue("d", res);
-}
-static PyObject *secpoly_c(PyObject *dummy, PyObject *args)
-{
-    double x;
-    double n;
-    if (!PyArg_ParseTuple(args, "dd", &x, &n))
-        return NULL;
-    calc_k_p;
-    double res = 1 / (expr_cospoly);
-    return Py_BuildValue("d", res);
-}
-static PyObject *cotpoly_c(PyObject *dummy, PyObject *args)
-{
-    double x;
-    double n;
-    if (!PyArg_ParseTuple(args, "dd", &x, &n))
-        return NULL;
-    calc_k_p;
-    double res = (expr_cospoly) / (expr_sinpoly);
-    return Py_BuildValue("d", res);
-}
+ufuncs_poly(poly, calc_k_p, expr_sinpoly, expr_cospoly);
 
 static PyMethodDef GentrigMethods[] = {
-    {"sinp", sinp_c,
-     METH_VARARGS,
-     "Parabolic sine function"},
-    {"cosp", cosp_c,
-     METH_VARARGS,
-     "Parabolic cosine function"},
-    {"tanp", tanp_c,
-     METH_VARARGS,
-     "Parabolic tangent function"},
-    {"cscp", cscp_c,
-     METH_VARARGS,
-     "Parabolic cosecant function"},
-    {"secp", secp_c,
-     METH_VARARGS,
-     "Parabolic secant function"},
-    {"cotp", cotp_c,
-     METH_VARARGS,
-     "Parabolic cotangent function"},
-    {"sinl", sinl_c,
-     METH_VARARGS,
-     "Linear sine function"},
-    {"cosl", cosl_c,
-     METH_VARARGS,
-     "Linear cosine function"},
-    {"tanl", tanl_c,
-     METH_VARARGS,
-     "Linear tangent function"},
-    {"cscl", cscl_c,
-     METH_VARARGS,
-     "Linear cosecant function"},
-    {"secl", secl_c,
-     METH_VARARGS,
-     "Linear secant function"},
-    {"cotl", cotl_c,
-     METH_VARARGS,
-     "Linear cotangent function"},
-    {"sinpoly", sinpoly_c,
-     METH_VARARGS,
-     "Polygonal sine function"},
-    {"cospoly", cospoly_c,
-     METH_VARARGS,
-     "Polygonal cosine function"},
-    {"tanpoly", tanpoly_c,
-     METH_VARARGS,
-     "Polygonal tangent function"},
-    {"cscpoly", cscpoly_c,
-     METH_VARARGS,
-     "Polygonal cosecant function"},
-    {"secpoly", secpoly_c,
-     METH_VARARGS,
-     "Polygonal secant function"},
-    {"cotpoly", cotpoly_c,
-     METH_VARARGS,
-     "Polygonal cotangent function"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
-
 static struct PyModuleDef gentrig_module_def = {
     PyModuleDef_HEAD_INIT,
     "_gentrig",
@@ -167,5 +158,21 @@ static struct PyModuleDef gentrig_module_def = {
 
 PyMODINIT_FUNC PyInit_gentrig(void)
 {
-    return PyModule_Create(&gentrig_module_def);
+
+    PyObject *m, *d;
+
+    import_array();
+    import_umath();
+
+    m = PyModule_Create(&gentrig_module_def);
+    if (!m)
+        return NULL;
+
+    d = PyModule_GetDict(m);
+
+    ufuncs_impl(p);
+    ufuncs_impl(l);
+    ufuncs_impl_poly(poly);
+
+    return m;
 }
