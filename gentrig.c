@@ -59,7 +59,7 @@ DEFINE_TRIG_FUNCTIONS(l, x, 1.0)
 
 /*
 Polygonal Trig is a special case from the macro in
-that it includes asecond argument for number of sides
+that it includes a second argument for number of sides
 */
 #define sec(x) (1.0 / cos(x))
 #define cot(x) (1.0 / tan(x))
