@@ -53,7 +53,7 @@
         return Py_BuildValue("d", res);                             \
     }
 
-DEFINE_TRIG_FUNCTIONS(p, pow(cbrt(3.0 * x), 2.0), cbrt(3.0 * x))
+DEFINE_TRIG_FUNCTIONS(p, -cbrt(3.0 * x), pow(cbrt(3.0 * x), 2.0))
 
 DEFINE_TRIG_FUNCTIONS(l, x, 1.0)
 
