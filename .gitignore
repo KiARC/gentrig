@@ -1,0 +1,7 @@
+build/
+.vscode/
+dist/
+*.egg-info/
+
+# Small file I use to view outputs of things
+test.py
