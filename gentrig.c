@@ -3,55 +3,25 @@
 #include <math.h>
 #include <corecrt_math_defines.h>
 
-#define DEFINE_TRIG_FUNCTIONS(name, expr_sin, expr_cos)             \
-    static PyObject *sin##name##_c(PyObject *dummy, PyObject *args) \
-    {                                                               \
-        double x;                                                   \
-        if (!PyArg_ParseTuple(args, "d", &x))                       \
-            return NULL;                                            \
-        double res = expr_sin;                                      \
-        return Py_BuildValue("d", res);                             \
-    }                                                               \
-    static PyObject *cos##name##_c(PyObject *dummy, PyObject *args) \
-    {                                                               \
-        double x;                                                   \
-        if (!PyArg_ParseTuple(args, "d", &x))                       \
-            return NULL;                                            \
-        double res = expr_cos;                                      \
-        return Py_BuildValue("d", res);                             \
-    }                                                               \
-    static PyObject *tan##name##_c(PyObject *dummy, PyObject *args) \
-    {                                                               \
-        double x;                                                   \
-        if (!PyArg_ParseTuple(args, "d", &x))                       \
-            return NULL;                                            \
-        double res = (expr_sin) / (expr_cos);                       \
-        return Py_BuildValue("d", res);                             \
-    }                                                               \
-    static PyObject *csc##name##_c(PyObject *dummy, PyObject *args) \
-    {                                                               \
-        double x;                                                   \
-        if (!PyArg_ParseTuple(args, "d", &x))                       \
-            return NULL;                                            \
-        double res = 1.0 / (expr_sin);                              \
-        return Py_BuildValue("d", res);                             \
-    }                                                               \
-    static PyObject *sec##name##_c(PyObject *dummy, PyObject *args) \
-    {                                                               \
-        double x;                                                   \
-        if (!PyArg_ParseTuple(args, "d", &x))                       \
-            return NULL;                                            \
-        double res = 1.0 / (expr_cos);                              \
-        return Py_BuildValue("d", res);                             \
-    }                                                               \
-    static PyObject *cot##name##_c(PyObject *dummy, PyObject *args) \
-    {                                                               \
-        double x;                                                   \
-        if (!PyArg_ParseTuple(args, "d", &x))                       \
-            return NULL;                                            \
-        double res = (expr_cos) / (expr_sin);                       \
-        return Py_BuildValue("d", res);                             \
+#define sec(x) (1.0 / cos(x))
+#define cot(x) (1.0 / tan(x))
+
+#define boilerplate(name, expr)                                  \
+    static PyObject *##name##_c(PyObject *dummy, PyObject *args) \
+    {                                                            \
+        double x;                                                \
+        if (!PyArg_ParseTuple(args, "d", &x))                    \
+            return NULL;                                         \
+        return Py_BuildValue("d", expr);                         \
     }
+
+#define DEFINE_TRIG_FUNCTIONS(name, expr_sin, expr_cos) \
+    boilerplate(sin##name, expr_sin);                   \
+    boilerplate(cos##name, expr_cos);                   \
+    boilerplate(tan##name, (expr_sin) / (expr_cos));    \
+    boilerplate(csc##name, 1.0 / (expr_sin));           \
+    boilerplate(sec##name, 1.0 / (expr_cos));           \
+    boilerplate(cot##name, (expr_cos) / (expr_sin));
 
 DEFINE_TRIG_FUNCTIONS(p, -cbrt(3.0 * x), pow(cbrt(3.0 * x), 2.0))
 
@@ -61,8 +31,6 @@ DEFINE_TRIG_FUNCTIONS(l, x, 1.0)
 Polygonal Trig is a special case from the macro in
 that it includes a second argument for number of sides
 */
-#define sec(x) (1.0 / cos(x))
-#define cot(x) (1.0 / tan(x))
 
 #define calc_k_p                                       \
     double k = floor((x / 2.0) * cot(M_PI / n) + 0.5); \
