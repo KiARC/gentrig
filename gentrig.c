@@ -1,7 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <math.h>
-#include <numpy/arrayobject.h>
 #include <corecrt_math_defines.h>
 
 #define DEFINE_TRIG_FUNCTIONS(name, expr_sin, expr_cos)             \
