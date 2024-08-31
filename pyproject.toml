@@ -3,5 +3,11 @@ requires = ["setuptools", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gentrig"  # as it would appear on PyPI
+name = "gentrig" # as it would appear on PyPI
 version = "0.1.0"
+authors = [
+    { name = "Katherine Rose", email = "kiarc@kiarc.win" },
+    { name = "Alexander Joseph" },
+    { name = "Joshua Piety" },
+]
+description = "Trigonometric functions generalized for parabolas and polygons"
