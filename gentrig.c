@@ -1,7 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <math.h>
-#include <corecrt_math_defines.h>
 #include <numpy/ndarraytypes.h>
 #include "numpy/ufuncobject.h"
 #include "numpy/npy_3kcompat.h"
