@@ -11,3 +11,4 @@ authors = [
     { name = "Joshua Piety" },
 ]
 description = "Trigonometric functions generalized for parabolas and polygons"
+dependencies = ['numpy']
