@@ -10,5 +10,6 @@ authors = [
     { name = "Alexander Joseph" },
     { name = "Joshua Piety" },
 ]
+requires-python = ">=3.8"
 description = "Trigonometric functions generalized for parabolas and polygons"
 dependencies = ['numpy']
