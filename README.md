@@ -73,6 +73,6 @@ Polygonal trig is fun! You can draw regular polygons of "radius" 1 (unit polygon
 
 `gentrig` can now be imported within whichever environment's `pip` was used to install it.
 
-### From PyPi
+### From PyPI
 
-Unfourtunately `gentrig` hasn't been published to PyPi yet, but that will hopefully change in the near future!
+Unfourtunately `gentrig` hasn't been published to PyPI yet, but that will hopefully change in the near future!
