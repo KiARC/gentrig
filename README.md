@@ -1,6 +1,5 @@
-|                                                      |
-| :--------------------------------------------------: |
 |               Generalized Trigonometry               |
+| :--------------------------------------------------: |
 | By Katherine Rose, Alexander Joseph and Joshua Piety |
 
 <!--Add whitepaper link here when that is finished-->
@@ -65,6 +64,10 @@ Polygonal trig is fun! You can draw regular polygons of "radius" 1 (unit polygon
 
 ## Installing `gentrig`...
 
+### From PyPI
+
+`gentrig` has been released on PyPI! You can install it with `pip install gentrig` and use it like any other python library!
+
 ### From source
 
 1. Clone this repo: `git clone https://github.com/KiARC/gentrig.git`
@@ -72,7 +75,3 @@ Polygonal trig is fun! You can draw regular polygons of "radius" 1 (unit polygon
 3. Build and install with `pip`: `pip install .`
 
 `gentrig` can now be imported within whichever environment's `pip` was used to install it.
-
-### From PyPI
-
-Unfourtunately `gentrig` hasn't been published to PyPI yet, but that will hopefully change in the near future!
