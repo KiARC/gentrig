@@ -25,8 +25,8 @@ jobs:
         - name: Build wheels
           run: python -m cibuildwheel --output-dir wheelhouse
           env:
-            # Ignore py36 and py37 because they're not supported
-            CIBW_SKIP: cp36-* cp37-*
+            # Ignore py36 and py37 because they're not supported, and ignorè 32bit platforms because they don't build
+            CIBW_SKIP: cp36-* cp37-* *-win32 *-manylinux_i686
         - name: Publish ${{ matrix.os }} wheels
           uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
           with:
