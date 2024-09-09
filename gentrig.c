@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <math.h>
