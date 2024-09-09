@@ -1,11 +1,14 @@
-#define _USE_MATH_DEFINES
-#include <cmath>
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <math.h>
 #include <numpy/ndarraytypes.h>
 #include "numpy/ufuncobject.h"
 #include "numpy/npy_3kcompat.h"
+
+// Ensure M_PI is defined, some platforms don't have it by default
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 #define sec(x) (1.0 / cos(x))
 #define cot(x) (1.0 / tan(x))
