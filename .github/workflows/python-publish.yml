@@ -27,10 +27,11 @@ jobs:
           env:
             # Ignore py36 and py37 because they're not supported, and ignorè 32bit platforms because they don't build
             CIBW_SKIP: cp36-* cp37-* *-win32 *-manylinux_i686
-        - name: Publish ${{ matrix.os }} wheels
-          uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        - name: Upload artifacts
+          uses: actions/upload-artifact@v3.2.1-node20
           with:
-            password: ${{ secrets.PYPI_API_TOKEN }}
+            name: ${{ matrix.os }}-dist
+            path: dist
   build_sdist:
     runs-on: ubuntu-latest
     steps:
@@ -44,8 +45,37 @@ jobs:
         pip install build numpy
     - name: Build sdist
       run: python -m build . --sdist
-    - name: Publish sdist
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3.2.1-node20
       with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        name: sdist-dist
+        path: dist
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - name: Download Linux Dist
+        uses: actions/download-artifact@master
+        with:
+          name: ubuntu-latest-dist
+          path: dist
+      - name: Download macOS 13 Dist
+        uses: actions/download-artifact@master
+        with:
+          name: macos-13-dist
+          path: dist
+      - name: Download macOS 14 Dist
+        uses: actions/download-artifact@master
+        with:
+          name: macos-14-dist
+          path: dist
+      - name: Download Windows Dist
+        uses: actions/download-artifact@master
+        with:
+          name: windows-latest-dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
     
