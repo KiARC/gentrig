@@ -26,7 +26,7 @@ jobs:
       with:
         python-versions: 'cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312'
     - name: Remove non-manylinux wheels
-      run: rm dist/gentrig*linux_x86_64*.whl
+      run: sudo rm dist/gentrig*linux_x86_64*.whl
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
