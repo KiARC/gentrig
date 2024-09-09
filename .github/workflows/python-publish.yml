@@ -8,28 +8,44 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
-
+  build_wheels:
+      name: Build wheels on ${{ matrix.os }}
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+  
+      steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-python@v5
+  
+        - name: Install cibuildwheel
+          run: python -m pip install cibuildwheel==2.20.0
+  
+        - name: Build wheels
+          run: python -m cibuildwheel --output-dir wheelhouse
+          env:
+            # Ignore py36 and py37 because they're not supported
+            CIBW_SKIP: cp36-* cp37-*
+        - name: Publish ${{ matrix.os }} wheels
+          uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+          with:
+            password: ${{ secrets.PYPI_API_TOKEN }}
+  build_sdist:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v3
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.x'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build
-    - name: Build compiled wheels
-      uses: RalfG/python-wheels-manylinux-build@v0.7.1
-      with:
-        python-versions: 'cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312'
+        pip install build numpy
     - name: Build sdist
       run: python -m build . --sdist
-    - name: Remove non-manylinux wheels
-      run: sudo rm dist/gentrig*linux_x86_64*.whl
-    - name: Publish package
+    - name: Publish sdist
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
+    
