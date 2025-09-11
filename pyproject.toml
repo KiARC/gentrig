@@ -9,7 +9,7 @@ description = "Trigonometric functions generalized for parabolas and polygons"
 name = "gentrig" # as it would appear on PyPI
 readme = "README.md"
 requires-python = ">=3.8"
-version = "0.1.1"
+version = "0.1.2"
 
 [build-system]
 build-backend = "setuptools.build_meta"
