@@ -59,8 +59,9 @@ jobs:
       - name: Download Wheels
         uses: actions/download-artifact@v5
         with:
-          name: cibw-wheels-*
+          pattern: cibw-wheels-*
           path: dist
+          merge-multiple: true
       - name: Download sdist
         uses: actions/download-artifact@v5
         with:
