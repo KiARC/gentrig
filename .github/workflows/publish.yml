@@ -57,12 +57,12 @@ jobs:
       - name: Setup UV
         uses: astral-sh/setup-uv@v6
       - name: Download Wheels
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v5
         with:
           name: cibw-wheels-*
           path: dist
       - name: Download sdist
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v5
         with:
           name: sdist
           path: dist
