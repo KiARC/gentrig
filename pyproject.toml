@@ -14,3 +14,6 @@ version = "0.1.1"
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [ "setuptools", "numpy" ]
+
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
