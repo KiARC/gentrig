@@ -7,7 +7,7 @@
 
 // Ensure M_PI is defined, some platforms don't have it by default
 #ifndef M_PI
-    #define M_PI 3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 
 #define sec(x) (1.0 / cos(x))
@@ -155,8 +155,8 @@ static PyMethodDef GentrigMethods[] = {
 };
 static struct PyModuleDef gentrig_module_def = {
     PyModuleDef_HEAD_INIT,
-    "_gentrig",
-    "Internal \"_gentrig\" module",
+    "gentrig",
+    "Trigonometric functions generalized for parabolas and polygons",
     -1,
     GentrigMethods};
 

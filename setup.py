@@ -1,6 +1,13 @@
 from setuptools import setup, Extension
-from numpy import get_include
+import numpy as np
 
-gentrig_ext = Extension(name="gentrig", sources=["gentrig.c"], include_dirs=[get_include()])
 
-setup(ext_modules=[gentrig_ext])
+setup(
+    ext_modules=[
+        Extension(
+            name="gentrig",
+            sources=["gentrig.c"],
+            include_dirs=[np.get_include()],
+        )
+    ],
+)
